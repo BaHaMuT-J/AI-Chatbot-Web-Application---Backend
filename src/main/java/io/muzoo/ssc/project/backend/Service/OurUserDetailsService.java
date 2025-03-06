@@ -1,4 +1,4 @@
-package io.muzoo.ssc.project.backend;
+package io.muzoo.ssc.project.backend.Service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;

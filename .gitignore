@@ -40,3 +40,4 @@ build/
 
 ## Mine
 .env
+*.properties
