@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Setter
 @Getter
 @Entity
@@ -18,11 +20,16 @@ public class AI {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
 
+    @Column(nullable = false)
     private String version;
 
-    @Column(name = "api_link")
+    @Column(name = "api_link", nullable = false)
     private String apiLink;
+
+    @OneToMany(mappedBy="ai")
+    private Set<Chat> chats;
 
 }

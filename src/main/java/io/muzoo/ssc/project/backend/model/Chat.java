@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Set;
+
 @Setter
 @Getter
 @Entity
@@ -18,13 +20,15 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id")
-    private Long userId;
+    @OneToMany(mappedBy="chat")
+    private Set<Message> messages;
 
-    @Column(name = "ai_id")
-    private Long aiId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="user_id", nullable=false)
+    private User user;
 
-    @Column(name = "message_id")
-    private Long messageId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="ai_id", nullable=false)
+    private AI ai;
 
 }
