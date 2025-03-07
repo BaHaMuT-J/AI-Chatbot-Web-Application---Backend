@@ -30,7 +30,7 @@ public class WebSecurityConfig {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.authorizeHttpRequests(auth -> auth
-				.requestMatchers("/", "/api/login", "/api/logout", "/home", "/hello").permitAll()  // Public access to these endpoints
+				.requestMatchers("/", "/api/login", "/api/logout", "/api/whoami", "/home", "/hello").permitAll()  // Public access to these endpoints
 				.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()  // Allow all OPTIONS requests (for CORS)
 				.anyRequest().authenticated()  // Require authentication for all other requests
 			)

@@ -30,7 +30,7 @@ public class AuthenticationController {
             return SimpleResponseDTO
                     .builder()
                     .success(true)
-                    .message("You are successful logged in.")
+                    .message("You are successfully logged in.")
                     .build();
         } catch (ServletException e) {
             return SimpleResponseDTO
@@ -48,7 +48,7 @@ public class AuthenticationController {
             return SimpleResponseDTO
                     .builder()
                     .success(true)
-                    .message("You are successful logged out.")
+                    .message("You are successfully logged out.")
                     .build();
         } catch (ServletException e) {
             return SimpleResponseDTO
