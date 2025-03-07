@@ -1,5 +1,6 @@
 package io.muzoo.ssc.project.backend.auth;
 
+import io.muzoo.ssc.project.backend.SimpleResponseDTO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,26 +16,40 @@ public class AuthenticationController {
     }
 
     @PostMapping("/api/login")
-    public String login(HttpServletRequest request) {
+    public SimpleResponseDTO login(HttpServletRequest request) {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         try {
             request.login(username, password);
-            return "Login Successful";
+            return SimpleResponseDTO
+                    .builder()
+                    .success(true)
+                    .message("You are successful logged in.")
+                    .build();
         } catch (ServletException e) {
-            e.printStackTrace();
-            return "Fail to login";
+            return SimpleResponseDTO
+                    .builder()
+                    .success(false)
+                    .message("Incorrect username or password.")
+                    .build();
         }
     }
 
     @GetMapping("/api/logout")
-    public String logout(HttpServletRequest request) {
+    public SimpleResponseDTO logout(HttpServletRequest request) {
         try {
             request.logout();
-            return "Logout Successful";
+            return SimpleResponseDTO
+                    .builder()
+                    .success(true)
+                    .message("You are successful logged out.")
+                    .build();
         } catch (ServletException e) {
-            e.printStackTrace();
-            return "Fail to logout";
+            return SimpleResponseDTO
+                    .builder()
+                    .success(false)
+                    .message("Fail to log you out.")
+                    .build();
         }
     }
 
