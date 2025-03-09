@@ -1,4 +1,4 @@
-package io.muzoo.ssc.project.backend.whoami;
+package io.muzoo.ssc.project.backend.DTO;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.muzoo.ssc.project.backend.model.Chat;
@@ -19,6 +19,4 @@ public class WhoamiDTO {
     private String username;
 
     private String displayName;
-
-    private Set<Chat> chats;
 }

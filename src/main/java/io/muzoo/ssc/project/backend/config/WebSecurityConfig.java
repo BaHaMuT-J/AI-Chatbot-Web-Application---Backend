@@ -1,6 +1,6 @@
 package io.muzoo.ssc.project.backend.config;
 
-import io.muzoo.ssc.project.backend.SimpleResponseDTO;
+import io.muzoo.ssc.project.backend.DTO.SimpleResponseDTO;
 import io.muzoo.ssc.project.backend.util.AjaxUtils;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

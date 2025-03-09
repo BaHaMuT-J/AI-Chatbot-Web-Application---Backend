@@ -1,5 +1,6 @@
 package io.muzoo.ssc.project.backend.whoami;
 
+import io.muzoo.ssc.project.backend.DTO.WhoamiDTO;
 import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +25,8 @@ public class WhoamiController {
                 User currentUser = userRepository.findFirstByUsername(user.getUsername());
                 return WhoamiDTO.builder()
                         .loggedIn(true)
+                        .username(currentUser.getUsername())
                         .displayName(currentUser.getDisplayName())
-                        .chats(currentUser.getChats())
                         .build();
             } else {
                 return WhoamiDTO.builder()
