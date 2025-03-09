@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+import org.thymeleaf.util.StringUtils;
 
 @RestController
 public class AuthenticationController {
@@ -22,8 +23,8 @@ public class AuthenticationController {
 
     @PostMapping("/api/login")
     public UserDTO login(@RequestBody LoginRequestDTO loginRequest, HttpServletRequest request) {
-        String username = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
+        String username = StringUtils.trim(loginRequest.getUsername());
+        String password = StringUtils.trim(loginRequest.getPassword());
         try {
             // if there is a current user logged in, if so log that user out first
             Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
