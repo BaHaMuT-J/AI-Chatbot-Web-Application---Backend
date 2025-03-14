@@ -16,6 +16,8 @@ public class WhoamiDTO {
 
     private boolean loggedIn = false;
 
+    private Long userId;
+
     private String username;
 
     private String displayName;

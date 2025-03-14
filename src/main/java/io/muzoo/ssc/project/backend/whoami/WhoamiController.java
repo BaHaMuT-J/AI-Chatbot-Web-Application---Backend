@@ -25,6 +25,7 @@ public class WhoamiController {
                 User currentUser = userRepository.findFirstByUsername(user.getUsername());
                 return WhoamiDTO.builder()
                         .loggedIn(true)
+                        .userId(currentUser.getId())
                         .username(currentUser.getUsername())
                         .displayName(currentUser.getDisplayName())
                         .build();

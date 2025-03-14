@@ -2,7 +2,6 @@ package io.muzoo.ssc.project.backend.auth;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.github.cdimascio.dotenv.Dotenv;
 import io.muzoo.ssc.project.backend.DTO.*;
 import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.AIRepository;
