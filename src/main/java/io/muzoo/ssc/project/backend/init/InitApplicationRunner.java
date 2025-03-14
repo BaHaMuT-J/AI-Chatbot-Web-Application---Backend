@@ -34,10 +34,10 @@ public class InitApplicationRunner implements ApplicationRunner {
             userRepository.save(admin);
         }
 
-        AI gemini = aiRepository.findFirstByName("gemini");
+        AI gemini = aiRepository.findFirstByName("Gemini");
         if (gemini == null) {
             gemini = new AI();
-            gemini.setName("gemini");
+            gemini.setName("Gemini");
             gemini.setVersion("1");
             gemini.setApiLink(String.format(
                     "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=%s",

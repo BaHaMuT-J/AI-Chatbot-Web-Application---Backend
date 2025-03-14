@@ -20,6 +20,7 @@ import org.springframework.web.client.RestTemplate;
 import org.thymeleaf.util.StringUtils;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -82,7 +83,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/api/user/create")
-    public UserDTO create(@RequestBody CreateUserRequestDTO createUserRequest, HttpServletRequest request) {
+    public UserDTO createUser(@RequestBody CreateUserRequestDTO createUserRequest, HttpServletRequest request) {
         String username = StringUtils.trim(createUserRequest.getUsername());
         String displayName = StringUtils.trim(createUserRequest.getDisplayName());
         String password = StringUtils.trim(createUserRequest.getPassword());
@@ -118,8 +119,17 @@ public class AuthenticationController {
         }
     }
 
+    @GetMapping("/api/ai/models")
+    public List<AIDTO> getModels(HttpServletRequest request) {
+        return aiRepository
+                .findAll()
+                .stream()
+                .map(ai -> AIDTO.builder().aiId(ai.getId()).name(ai.getName()).version(ai.getVersion()).build())
+                .toList();
+    }
+
     @PostMapping("/api/ai/response")
-    public Map<String, Object> generateContent(@RequestBody AIRequestDTO aiRequest, HttpServletRequest request) {
+    public AIResponseDTO getAIResponse(@RequestBody AIRequestDTO aiRequest, HttpServletRequest request) {
         String aiAPI = aiRepository.findFirstByName(aiRequest.getAi()).getApiLink();
         RestTemplate restTemplate = new RestTemplate();
 
@@ -128,7 +138,7 @@ public class AuthenticationController {
 
         String prompt = aiRequest.getPrompt();
         if (prompt == null || prompt.isEmpty()) {
-            return Map.of("error", "Prompt is required.");
+            return AIResponseDTO.builder().success(false).message("Missing prompt.").build();
         }
 
         Map<String, Object> requestBody = new HashMap<>();
@@ -152,16 +162,15 @@ public class AuthenticationController {
                     JsonNode part = candidate.get("content").get("parts").get(0);
                     if (part.has("text")) {
                         // TODO : store response in database
-                        return Map.of("response", part.get("text").asText());
+                        return AIResponseDTO.builder().response(part.get("text").asText()).build();
                     }
                 }
             }
 
-            return Map.of("error", "Could not extract response."); // Handle case where response is not found.
+            return AIResponseDTO.builder().success(false).message("Could not extract response.").build();
 
         } catch (Exception e) {
-            e.printStackTrace();
-            return Map.of("error", "An error occurred processing the request.");
+            return AIResponseDTO.builder().success(false).message("An error occurred when processing the request.").build();
         }
     }
 
