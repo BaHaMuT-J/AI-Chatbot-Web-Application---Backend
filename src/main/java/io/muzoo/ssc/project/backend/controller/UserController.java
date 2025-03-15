@@ -2,7 +2,11 @@ package io.muzoo.ssc.project.backend.controller;
 
 import io.muzoo.ssc.project.backend.DTO.CreateUserRequestDTO;
 import io.muzoo.ssc.project.backend.DTO.UserDTO;
+import io.muzoo.ssc.project.backend.model.AI;
+import io.muzoo.ssc.project.backend.model.Chat;
 import io.muzoo.ssc.project.backend.model.User;
+import io.muzoo.ssc.project.backend.repository.AIRepository;
+import io.muzoo.ssc.project.backend.repository.ChatRepository;
 import io.muzoo.ssc.project.backend.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,14 +16,22 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
 
+import java.util.List;
+
 @RestController
 public class UserController {
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private AIRepository aiRepository;
+
+    @Autowired
+    private ChatRepository chatRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @PostMapping("/api/user/create")
     public UserDTO createUser(@RequestBody CreateUserRequestDTO createUserRequest, HttpServletRequest request) {
@@ -37,7 +49,6 @@ public class UserController {
 
         User user = userRepository.findFirstByUsername(username);
         if (user != null) {
-            // TODO : Create empty chat for new user in database
             return UserDTO
                     .builder()
                     .success(false)
@@ -49,6 +60,15 @@ public class UserController {
             user.setDisplayName(displayName);
             user.setPassword(passwordEncoder.encode(password));
             userRepository.save(user);
+
+            List<AI> ais = aiRepository.findAll();
+            for (AI ai : ais) {
+                Chat chat = new Chat();
+                chat.setUser(user);
+                chat.setAi(ai);
+                chatRepository.save(chat);
+            }
+
             return UserDTO
                     .builder()
                     .success(true)

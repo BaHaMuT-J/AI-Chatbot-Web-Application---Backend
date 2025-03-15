@@ -8,7 +8,9 @@ import io.muzoo.ssc.project.backend.DTO.ChatDTO;
 import io.muzoo.ssc.project.backend.DTO.ChatRequestDTO;
 import io.muzoo.ssc.project.backend.model.AI;
 import io.muzoo.ssc.project.backend.model.Chat;
+import io.muzoo.ssc.project.backend.model.Message;
 import io.muzoo.ssc.project.backend.repository.ChatRepository;
+import io.muzoo.ssc.project.backend.repository.MessageRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
@@ -25,6 +27,9 @@ public class ChatController {
 
     @Autowired
     private ChatRepository chatRepository;
+
+    @Autowired
+    private MessageRepository messageRepository;
 
     @PostMapping("/api/chat/getByUserAndAI")
     public ChatDTO getChat(@RequestBody ChatRequestDTO chatRequestDTO) {
@@ -62,13 +67,26 @@ public class ChatController {
             ObjectMapper objectMapper = new ObjectMapper();
             JsonNode rootNode = objectMapper.readTree(response.getBody());
 
-            if (rootNode.has("candidates") && rootNode.get("candidates").isArray() && rootNode.get("candidates").size() > 0) {
+            if (rootNode.has("candidates") && rootNode.get("candidates").isArray() && !rootNode.get("candidates").isEmpty()) {
                 JsonNode candidate = rootNode.get("candidates").get(0);
                 if (candidate.has("content") && candidate.get("content").has("parts") && candidate.get("content").get("parts").isArray() && candidate.get("content").get("parts").size() > 0) {
                     JsonNode part = candidate.get("content").get("parts").get(0);
                     if (part.has("text")) {
-                        // TODO : store response in database
-                        return SendMessageResponseDTO.builder().response(part.get("text").asText()).build();
+                        String responseText = part.get("text").asText();
+
+                        Message userMsg = new Message();
+                        userMsg.setChat(chat);
+                        userMsg.setUser(true);
+                        userMsg.setText(prompt);
+                        messageRepository.save(userMsg);
+
+                        Message aiMsg = new Message();
+                        aiMsg.setChat(chat);
+                        aiMsg.setUser(false);
+                        aiMsg.setText(responseText);
+                        messageRepository.save(aiMsg);
+
+                        return SendMessageResponseDTO.builder().response(responseText).build();
                     }
                 }
             }
