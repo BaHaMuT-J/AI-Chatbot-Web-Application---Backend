@@ -5,8 +5,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AIRequestDTO {
+public class MessageRequestDTO {
 
-    private String ai;
-    private String prompt;
+    private Long chatId;
 }

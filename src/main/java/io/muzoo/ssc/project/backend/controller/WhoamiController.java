@@ -1,4 +1,4 @@
-package io.muzoo.ssc.project.backend.whoami;
+package io.muzoo.ssc.project.backend.controller;
 
 import io.muzoo.ssc.project.backend.DTO.WhoamiDTO;
 import io.muzoo.ssc.project.backend.model.User;
