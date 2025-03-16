@@ -38,8 +38,8 @@ public class ChatController {
     }
 
     @PostMapping("/api/chat/send")
-    public SendMessageResponseDTO sendMessage(@RequestBody SendMessageRequestDTO aiRequest, HttpServletRequest request) {
-        Chat chat = chatRepository.findFirstById(aiRequest.getChatId());
+    public SendMessageResponseDTO sendMessage(@RequestBody SendMessageRequestDTO sendMessageRequest, HttpServletRequest request) {
+        Chat chat = chatRepository.findFirstById(sendMessageRequest.getChatId());
         AI ai = chat.getAi();
         String aiAPI = ai.getApiLink();
         RestTemplate restTemplate = new RestTemplate();
@@ -47,7 +47,7 @@ public class ChatController {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        String prompt = aiRequest.getPrompt();
+        String prompt = sendMessageRequest.getPrompt();
         if (prompt == null || prompt.isEmpty()) {
             return SendMessageResponseDTO.builder().success(false).message("Missing prompt.").build();
         }
@@ -86,7 +86,7 @@ public class ChatController {
                         aiMsg.setText(responseText);
                         messageRepository.save(aiMsg);
 
-                        return SendMessageResponseDTO.builder().response(responseText).build();
+                        return SendMessageResponseDTO.builder().success(true).response(responseText).build();
                     }
                 }
             }

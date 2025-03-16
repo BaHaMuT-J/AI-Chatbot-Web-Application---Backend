@@ -21,7 +21,7 @@ public class Message {
     @Column(nullable = false)
     private boolean isUser;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String text;
 
     @ManyToOne(fetch = FetchType.LAZY)
