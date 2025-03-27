@@ -2,34 +2,34 @@ package io.muzoo.ssc.project.backend.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.muzoo.ssc.project.backend.DTO.SendMessageRequestDTO;
-import io.muzoo.ssc.project.backend.DTO.SendMessageResponseDTO;
-import io.muzoo.ssc.project.backend.DTO.ChatDTO;
-import io.muzoo.ssc.project.backend.DTO.ChatRequestDTO;
+import io.github.cdimascio.dotenv.Dotenv;
+import io.muzoo.ssc.project.backend.DTO.*;
 import io.muzoo.ssc.project.backend.model.AI;
 import io.muzoo.ssc.project.backend.model.Chat;
 import io.muzoo.ssc.project.backend.model.Message;
+import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.ChatRepository;
 import io.muzoo.ssc.project.backend.repository.MessageRepository;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.Prompt;
+import io.muzoo.ssc.project.backend.repository.UserRepository;
 import org.springframework.ai.openai.OpenAiChatModel;
+import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 public class ChatController {
+
+    @Autowired
+    private UserRepository userRepository;
 
     @Autowired
     private ChatRepository chatRepository;
@@ -44,19 +44,62 @@ public class ChatController {
     }
 
     @PostMapping("/api/chat/send")
-    public SendMessageResponseDTO sendMessage(@RequestBody SendMessageRequestDTO sendMessageRequest, HttpServletRequest request) {
+    public SendMessageResponseDTO sendMessage(@RequestBody SendMessageRequestDTO sendMessageRequest) {
         Chat chat = chatRepository.findFirstById(sendMessageRequest.getChatId());
+
+        // Validate chat owner and current logged-in user
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.User user) {
+            User currentUser = userRepository.findFirstByUsername(user.getUsername());
+            if (!chat.getUser().getId().equals(currentUser.getId())) {
+                return SendMessageResponseDTO.builder()
+                        .success(false)
+                        .message("User cannot send prompt to chat of other users.")
+                        .build();
+            }
+        } else {
+            return SendMessageResponseDTO.builder().success(false).message("User must log in first.").build();
+        }
+
         AI ai = chat.getAi();
-        String aiAPI = ai.getApiLink();
+        String prompt = sendMessageRequest.getPrompt();
+
+        // Validate prompt not blank
+        if (prompt == null || prompt.isBlank()) {
+            return SendMessageResponseDTO.builder().success(false).message("Missing prompt.").build();
+        }
+
+        String aiName = ai.getName();
+
+        return switch (aiName) {
+            case "Gemini" -> getGeminiResponse(chat, ai.getApiLink(), sendMessageRequest.getPrompt());
+            case "groq" -> getGroqResponse(chat, ai, sendMessageRequest.getPrompt());
+            default -> SendMessageResponseDTO.builder()
+                    .success(false)
+                    .message(String.format("No AI with name %s.", aiName))
+                    .build();
+        };
+    }
+
+    private void saveChat(Chat chat, String prompt, String responseText) {
+        Message userMsg = new Message();
+        userMsg.setChat(chat);
+        userMsg.setUser(true);
+        userMsg.setText(prompt);
+        messageRepository.save(userMsg);
+
+        Message aiMsg = new Message();
+        aiMsg.setChat(chat);
+        aiMsg.setUser(false);
+        aiMsg.setText(responseText);
+        messageRepository.save(aiMsg);
+    }
+
+    private SendMessageResponseDTO getGeminiResponse(Chat chat, String aiAPI, String prompt) {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
-        String prompt = sendMessageRequest.getPrompt();
-        if (prompt == null || prompt.isEmpty()) {
-            return SendMessageResponseDTO.builder().success(false).message("Missing prompt.").build();
-        }
 
         Map<String, Object> requestBody = new HashMap<>();
         Map<String, Object> contents = new HashMap<>();
@@ -79,42 +122,41 @@ public class ChatController {
                     JsonNode part = candidate.get("content").get("parts").get(0);
                     if (part.has("text")) {
                         String responseText = part.get("text").asText();
-
-                        Message userMsg = new Message();
-                        userMsg.setChat(chat);
-                        userMsg.setUser(true);
-                        userMsg.setText(prompt);
-                        messageRepository.save(userMsg);
-
-                        Message aiMsg = new Message();
-                        aiMsg.setChat(chat);
-                        aiMsg.setUser(false);
-                        aiMsg.setText(responseText);
-                        messageRepository.save(aiMsg);
-
+                        saveChat(chat, prompt, responseText);
                         return SendMessageResponseDTO.builder().success(true).response(responseText).build();
                     }
                 }
             }
 
-            return SendMessageResponseDTO.builder().success(false).message("Could not extract response.").build();
+            return SendMessageResponseDTO.builder()
+                    .success(false)
+                    .message("Could not extract response.")
+                    .build();
 
         } catch (Exception e) {
-            return SendMessageResponseDTO.builder().success(false).message("An error occurred when processing the request.").build();
+            return SendMessageResponseDTO.builder()
+                    .success(false)
+                    .message("An error occurred when processing the request.")
+                    .build();
         }
     }
 
-    @Autowired
-    private OpenAiChatModel chatModel;
-
-    @PostMapping("/api/ai/generate")
-    public String generate(@RequestBody String message) {
-        return this.chatModel.call(message);
-    }
-
-    @PostMapping("/api/ai/generateStream")
-    public Flux<ChatResponse> generateStream(@RequestBody String message) {
-        Prompt prompt = new Prompt(new UserMessage(message));
-        return this.chatModel.stream(prompt);
+    private SendMessageResponseDTO getGroqResponse(Chat chat, AI ai, String prompt) {
+        Dotenv dotenv = Dotenv.load();
+        OpenAiApi openAiApi = OpenAiApi.builder()
+                .baseUrl(ai.getApiLink())
+                .apiKey(dotenv.get("GROQ_API_KEY"))
+                .build();
+        OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
+                .model(ai.getVersion())
+                .maxTokens(200)
+                .build();
+        String responseText = OpenAiChatModel.builder()
+                .openAiApi(openAiApi)
+                .defaultOptions(openAiChatOptions)
+                .build()
+                .call(prompt);
+        saveChat(chat, prompt, responseText);
+        return SendMessageResponseDTO.builder().success(true).response(responseText).build();
     }
 }
