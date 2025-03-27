@@ -69,7 +69,7 @@ public class ChatController {
 
             if (rootNode.has("candidates") && rootNode.get("candidates").isArray() && !rootNode.get("candidates").isEmpty()) {
                 JsonNode candidate = rootNode.get("candidates").get(0);
-                if (candidate.has("content") && candidate.get("content").has("parts") && candidate.get("content").get("parts").isArray() && candidate.get("content").get("parts").size() > 0) {
+                if (candidate.has("content") && candidate.get("content").has("parts") && candidate.get("content").get("parts").isArray() && !candidate.get("content").get("parts").isEmpty()) {
                     JsonNode part = candidate.get("content").get("parts").get(0);
                     if (part.has("text")) {
                         String responseText = part.get("text").asText();

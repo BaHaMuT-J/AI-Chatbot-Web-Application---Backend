@@ -5,18 +5,41 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.3.0</version>
+		<version>3.3.10</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>securing-web-complete</artifactId>
+	<artifactId>ai-chatbot-web</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>securing-web-complete</name>
-	<description>Demo project for Spring Boot</description>
+	<name>ai_chatbot</name>
+	<description>Spring Boot backend for AI chatbot full stack webapp</description>
 
 	<properties>
-		<java.version>17</java.version>
+		<java.version>21</java.version>
+		<spring-ai.version>1.0.0-M6</spring-ai.version>
 	</properties>
+
+	<repositories>
+		<repository>
+			<id>spring-snapshots</id>
+			<name>Spring Snapshots</name>
+			<url>https://repo.spring.io/snapshot</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+		</repository>
+		<repository>
+			<name>Central Portal Snapshots</name>
+			<id>central-portal-snapshots</id>
+			<url>https://central.sonatype.com/repository/maven-snapshots/</url>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<dependency>
@@ -55,6 +78,60 @@
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
 
+		<!-- Spring AI -->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-anthropic-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-azure-openai-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-bedrock-ai-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-bedrock-converse-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-markdown-document-reader</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-mistral-ai-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-ollama-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-openai-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-starter-model-openai</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-postgresml-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-stability-ai-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-tika-document-reader</artifactId>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>org.springframework.ai</groupId>-->
+<!--			<artifactId>spring-ai-vertex-ai-gemini-spring-boot-starter</artifactId>-->
+<!--		</dependency>-->
+
 		<!-- https://mvnrepository.com/artifact/org.projectlombok/lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
@@ -73,7 +150,26 @@
 			<artifactId>dotenv-java</artifactId>
 			<version>3.1.0</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/me.paulschwarz/spring-dotenv -->
+		<dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>4.0.0</version>
+		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.ai</groupId>
+				<artifactId>spring-ai-bom</artifactId>
+				<version>${spring-ai.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
 
 	<build>
 		<plugins>
@@ -81,7 +177,7 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>3.3.0</version>
+				<version>3.3.10</version>
 				<executions>
 					<execution>
 						<goals>
