@@ -12,12 +12,18 @@ import io.muzoo.ssc.project.backend.model.Message;
 import io.muzoo.ssc.project.backend.repository.ChatRepository;
 import io.muzoo.ssc.project.backend.repository.MessageRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import reactor.core.publisher.Flux;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -96,5 +102,19 @@ public class ChatController {
         } catch (Exception e) {
             return SendMessageResponseDTO.builder().success(false).message("An error occurred when processing the request.").build();
         }
+    }
+
+    @Autowired
+    private OpenAiChatModel chatModel;
+
+    @PostMapping("/api/ai/generate")
+    public String generate(@RequestBody String message) {
+        return this.chatModel.call(message);
+    }
+
+    @PostMapping("/api/ai/generateStream")
+    public Flux<ChatResponse> generateStream(@RequestBody String message) {
+        Prompt prompt = new Prompt(new UserMessage(message));
+        return this.chatModel.stream(prompt);
     }
 }
