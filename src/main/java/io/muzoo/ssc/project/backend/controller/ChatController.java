@@ -11,6 +11,9 @@ import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.ChatRepository;
 import io.muzoo.ssc.project.backend.repository.MessageRepository;
 import io.muzoo.ssc.project.backend.repository.UserRepository;
+import org.springframework.ai.mistralai.MistralAiChatModel;
+import org.springframework.ai.mistralai.MistralAiChatOptions;
+import org.springframework.ai.mistralai.api.MistralAiApi;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
@@ -75,6 +78,7 @@ public class ChatController {
             case "Gemini" -> getGeminiResponse(chat, ai.getApiLink(), sendMessageRequest.getPrompt());
             case "groq" -> getGroqResponse(chat, ai, sendMessageRequest.getPrompt());
             case "DeepSeek" -> getDeepSeekResponse(chat, ai, sendMessageRequest.getPrompt());
+            case "Mistral" -> getMistralResponse(chat, ai, sendMessageRequest.getPrompt());
             default -> SendMessageResponseDTO.builder()
                     .success(false)
                     .message(String.format("No AI with name %s.", aiName))
@@ -174,6 +178,22 @@ public class ChatController {
         String responseText = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
                 .defaultOptions(openAiChatOptions)
+                .build()
+                .call(prompt);
+        saveChat(chat, prompt, responseText);
+        return SendMessageResponseDTO.builder().success(true).response(responseText).build();
+    }
+
+    private SendMessageResponseDTO getMistralResponse(Chat chat, AI ai, String prompt) {
+        Dotenv dotenv = Dotenv.load();
+        MistralAiApi mistralAiApi = new MistralAiApi(dotenv.get("MISTRAL_API_KEY"));
+        MistralAiChatOptions mistralAiChatOptions = MistralAiChatOptions.builder()
+                .model(ai.getVersion())
+                .maxTokens(200)
+                .build();
+        String responseText = MistralAiChatModel.builder()
+                .mistralAiApi(mistralAiApi)
+                .defaultOptions(mistralAiChatOptions)
                 .build()
                 .call(prompt);
         saveChat(chat, prompt, responseText);
