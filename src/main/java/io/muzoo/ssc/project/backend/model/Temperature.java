@@ -13,23 +13,22 @@ import java.util.Set;
 @Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "tbl_ai")
-public class AI {
+@Table(name = "tbl_temperature")
+public class Temperature {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="user_id", nullable=false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="ai_id", nullable=false)
+    private AI ai;
+
     @Column(nullable = false)
-    private String name;
-
-    @Column(name = "api_link", nullable = false)
-    private String apiLink;
-
-    @OneToMany(mappedBy="ai")
-    private Set<Chat> chats;
-
-    @OneToMany(mappedBy="modelName")
-    private Set<ModelAvailable> modelsAvailable;
+    private Double temperature;
 
 }

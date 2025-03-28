@@ -8,5 +8,4 @@ import org.springframework.stereotype.Repository;
 public interface AIRepository extends JpaRepository<AI, Long> {
     AI findFirstById(Long id);
     AI findFirstByName(String name);
-    AI findFirstByNameAndVersion(String name, String version);
 }

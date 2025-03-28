@@ -11,5 +11,5 @@ public class AIDTO {
 
     private Long aiId;
     private String name;
-    private String version;
+    private String model;
 }

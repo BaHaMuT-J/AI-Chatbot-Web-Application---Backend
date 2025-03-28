@@ -8,9 +8,7 @@ import io.muzoo.ssc.project.backend.model.AI;
 import io.muzoo.ssc.project.backend.model.Chat;
 import io.muzoo.ssc.project.backend.model.Message;
 import io.muzoo.ssc.project.backend.model.User;
-import io.muzoo.ssc.project.backend.repository.ChatRepository;
-import io.muzoo.ssc.project.backend.repository.MessageRepository;
-import io.muzoo.ssc.project.backend.repository.UserRepository;
+import io.muzoo.ssc.project.backend.repository.*;
 import org.springframework.ai.mistralai.MistralAiChatModel;
 import org.springframework.ai.mistralai.MistralAiChatOptions;
 import org.springframework.ai.mistralai.api.MistralAiApi;
@@ -39,6 +37,15 @@ public class ChatController {
 
     @Autowired
     private MessageRepository messageRepository;
+
+    @Autowired
+    private ModelCurrentRepository modelCurrentRepository;
+
+    @Autowired
+    private TemperatureRepository temperatureRepository;
+
+    @Autowired
+    private MaxTokenRepository maxTokenRepository;
 
     @PostMapping("/api/chat/getByUserAndAI")
     public ChatDTO getChat(@RequestBody ChatRequestDTO chatRequestDTO) {
@@ -152,9 +159,11 @@ public class ChatController {
                 .baseUrl(ai.getApiLink())
                 .apiKey(dotenv.get("GROQ_API_KEY"))
                 .build();
+        Long userId = chat.getUser().getId(), aiId = ai.getId();
         OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
-                .model(ai.getVersion())
-                .maxTokens(200)
+                .model(modelCurrentRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getModelName())
+                .temperature(temperatureRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getTemperature())
+                .maxTokens(maxTokenRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getMaxToken())
                 .build();
         String responseText = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
@@ -171,9 +180,11 @@ public class ChatController {
                 .baseUrl(ai.getApiLink())
                 .apiKey(dotenv.get("DEEPSEEK_API_KEY"))
                 .build();
+        Long userId = chat.getUser().getId(), aiId = ai.getId();
         OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
-                .model(ai.getVersion())
-                .maxTokens(200)
+                .model(modelCurrentRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getModelName())
+                .temperature(temperatureRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getTemperature())
+                .maxTokens(maxTokenRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getMaxToken())
                 .build();
         String responseText = OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
@@ -187,9 +198,11 @@ public class ChatController {
     private SendMessageResponseDTO getMistralResponse(Chat chat, AI ai, String prompt) {
         Dotenv dotenv = Dotenv.load();
         MistralAiApi mistralAiApi = new MistralAiApi(dotenv.get("MISTRAL_API_KEY"));
+        Long userId = chat.getUser().getId(), aiId = ai.getId();
         MistralAiChatOptions mistralAiChatOptions = MistralAiChatOptions.builder()
-                .model(ai.getVersion())
-                .maxTokens(200)
+                .model(modelCurrentRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getModelName())
+                .temperature(temperatureRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getTemperature())
+                .maxTokens(maxTokenRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getMaxToken())
                 .build();
         String responseText = MistralAiChatModel.builder()
                 .mistralAiApi(mistralAiApi)
