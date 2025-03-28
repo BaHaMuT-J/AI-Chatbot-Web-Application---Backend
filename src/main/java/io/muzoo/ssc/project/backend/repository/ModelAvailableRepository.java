@@ -9,4 +9,5 @@ import java.util.List;
 @Repository
 public interface ModelAvailableRepository extends JpaRepository<ModelAvailable, Long> {
     List<ModelAvailable> findByAi_Id(Long aiId);
+    ModelAvailable findFirstByAi_Id(Long aiId);
 }

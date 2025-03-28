@@ -2,6 +2,7 @@ package io.muzoo.ssc.project.backend.init;
 
 import io.muzoo.ssc.project.backend.model.*;
 import io.muzoo.ssc.project.backend.repository.*;
+import io.muzoo.ssc.project.backend.service.CreateUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -37,6 +38,9 @@ public class InitApplicationRunner implements ApplicationRunner {
 
     @Autowired
     private MaxTokenRepository maxTokenRepository;
+
+    @Autowired
+    private CreateUserService createUserService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
@@ -107,40 +111,9 @@ public class InitApplicationRunner implements ApplicationRunner {
 
         User admin = userRepository.findFirstByUsername("admin");
         if (admin == null) {
-            admin = new User();
-            admin.setUsername("admin");
-            admin.setPassword(passwordEncoder.encode("a"));
-            admin.setDisplayName("admin");
-            userRepository.save(admin);
-
-            List<AI> ais = aiRepository.findAll();
-            List<String> defaultModels = List.of("2.0 Flash", "llama3-70b-8192", "deepseek-chat", "mistral-small-latest");
-            int index = 0;
-            for (AI ai : ais) {
-                Chat chat = new Chat();
-                chat.setUser(admin);
-                chat.setAi(ai);
-                chatRepository.save(chat);
-
-                Temperature temperature = new Temperature();
-                temperature.setTemperature(0.8);
-                temperature.setUser(admin);
-                temperature.setAi(ai);
-                temperatureRepository.save(temperature);
-
-                MaxToken maxToken = new MaxToken();
-                maxToken.setMaxToken(200);
-                maxToken.setUser(admin);
-                maxToken.setAi(ai);
-                maxTokenRepository.save(maxToken);
-
-                ModelCurrent modelCurrent = new ModelCurrent();
-                modelCurrent.setModelName(defaultModels.get(index));
-                modelCurrent.setUser(admin);
-                modelCurrent.setAi(ai);
-                modelCurrentRepository.save(modelCurrent);
-                index += 1;
-            }
+            createUserService.createUser("admin", "admin", "a");
+        } else {
+            createUserService.setupUserAI(admin);
         }
     }
 }
