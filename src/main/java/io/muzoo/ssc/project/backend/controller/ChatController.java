@@ -74,6 +74,7 @@ public class ChatController {
         return switch (aiName) {
             case "Gemini" -> getGeminiResponse(chat, ai.getApiLink(), sendMessageRequest.getPrompt());
             case "groq" -> getGroqResponse(chat, ai, sendMessageRequest.getPrompt());
+            case "DeepSeek" -> getDeepSeekResponse(chat, ai, sendMessageRequest.getPrompt());
             default -> SendMessageResponseDTO.builder()
                     .success(false)
                     .message(String.format("No AI with name %s.", aiName))
@@ -146,6 +147,25 @@ public class ChatController {
         OpenAiApi openAiApi = OpenAiApi.builder()
                 .baseUrl(ai.getApiLink())
                 .apiKey(dotenv.get("GROQ_API_KEY"))
+                .build();
+        OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
+                .model(ai.getVersion())
+                .maxTokens(200)
+                .build();
+        String responseText = OpenAiChatModel.builder()
+                .openAiApi(openAiApi)
+                .defaultOptions(openAiChatOptions)
+                .build()
+                .call(prompt);
+        saveChat(chat, prompt, responseText);
+        return SendMessageResponseDTO.builder().success(true).response(responseText).build();
+    }
+
+    private SendMessageResponseDTO getDeepSeekResponse(Chat chat, AI ai, String prompt) {
+        Dotenv dotenv = Dotenv.load();
+        OpenAiApi openAiApi = OpenAiApi.builder()
+                .baseUrl(ai.getApiLink())
+                .apiKey(dotenv.get("DEEPSEEK_API_KEY"))
                 .build();
         OpenAiChatOptions openAiChatOptions = OpenAiChatOptions.builder()
                 .model(ai.getVersion())
