@@ -1,10 +1,9 @@
 package io.muzoo.ssc.project.backend.controller;
 
 import io.muzoo.ssc.project.backend.DTO.AIDTO;
+import io.muzoo.ssc.project.backend.model.ModelAvailable;
 import io.muzoo.ssc.project.backend.model.User;
-import io.muzoo.ssc.project.backend.repository.AIRepository;
-import io.muzoo.ssc.project.backend.repository.ModelCurrentRepository;
-import io.muzoo.ssc.project.backend.repository.UserRepository;
+import io.muzoo.ssc.project.backend.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +22,15 @@ public class AIController {
 
     @Autowired
     private ModelCurrentRepository modelCurrentRepository;
+
+    @Autowired
+    private TemperatureRepository temperatureRepository;
+
+    @Autowired
+    private MaxTokenRepository maxTokenRepository;
+
+    @Autowired
+    private ModelAvailableRepository modelAvailableRepository;
 
     @GetMapping("/api/ai/models")
     public List<AIDTO> getModels() {
@@ -45,6 +53,17 @@ public class AIController {
                         .model(modelCurrentRepository
                                 .findFirstByUser_IdAndAi_Id(userId, ai.getId())
                                 .getModelName())
+                        .temperature(temperatureRepository
+                                .findFirstByUser_IdAndAi_Id(userId, ai.getId())
+                                .getTemperature())
+                        .maxToken(maxTokenRepository
+                                .findFirstByUser_IdAndAi_Id(userId, ai.getId())
+                                .getMaxToken())
+                        .modelsAvailable(modelAvailableRepository
+                                .findByAi_Id(ai.getId())
+                                .stream()
+                                .map(ModelAvailable::getModelName)
+                                .toList())
                         .build())
                 .toList();
     }
