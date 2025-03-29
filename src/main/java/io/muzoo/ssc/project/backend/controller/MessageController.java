@@ -3,7 +3,6 @@ package io.muzoo.ssc.project.backend.controller;
 import io.muzoo.ssc.project.backend.DTO.ChatMessageResponseDTO;
 import io.muzoo.ssc.project.backend.DTO.MessageDTO;
 import io.muzoo.ssc.project.backend.DTO.MessageRequestDTO;
-import io.muzoo.ssc.project.backend.DTO.SettingResponseDTO;
 import io.muzoo.ssc.project.backend.model.Chat;
 import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.ChatRepository;

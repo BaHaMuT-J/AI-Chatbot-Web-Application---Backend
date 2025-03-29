@@ -20,7 +20,7 @@ public class Chat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToMany(mappedBy="chat")
+    @OneToMany(mappedBy="chat", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Message> messages;
 
     @ManyToOne(fetch = FetchType.LAZY)

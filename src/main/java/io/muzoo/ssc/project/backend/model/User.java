@@ -29,7 +29,16 @@ public class User {
     @Column(name = "display_name", nullable = false)
     private String displayName;
 
-    @OneToMany(mappedBy="user")
+    @OneToMany(mappedBy="user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Chat> chats;
+
+    @OneToMany(mappedBy="user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<ModelCurrent> modelsName;
+
+    @OneToMany(mappedBy="user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<Temperature> temperatures;
+
+    @OneToMany(mappedBy="user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<MaxToken> maxTokens;
 
 }
