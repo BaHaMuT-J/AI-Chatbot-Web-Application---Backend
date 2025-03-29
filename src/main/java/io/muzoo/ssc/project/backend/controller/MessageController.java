@@ -3,6 +3,7 @@ package io.muzoo.ssc.project.backend.controller;
 import io.muzoo.ssc.project.backend.DTO.ChatMessageResponseDTO;
 import io.muzoo.ssc.project.backend.DTO.MessageDTO;
 import io.muzoo.ssc.project.backend.DTO.MessageRequestDTO;
+import io.muzoo.ssc.project.backend.DTO.SettingResponseDTO;
 import io.muzoo.ssc.project.backend.model.Chat;
 import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.ChatRepository;
@@ -11,9 +12,12 @@ import io.muzoo.ssc.project.backend.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Objects;
 
 @RestController
 public class MessageController {
@@ -28,7 +32,14 @@ public class MessageController {
     private MessageRepository messageRepository;
 
     @PostMapping("/api/message/getByChat")
-    public ChatMessageResponseDTO getMessages(@Valid @RequestBody MessageRequestDTO messageRequest) {
+    public ChatMessageResponseDTO getMessages(@Valid @RequestBody MessageRequestDTO messageRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            return ChatMessageResponseDTO.builder()
+                    .success(false)
+                    .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
+                    .build();
+        }
+
         Chat chat = chatRepository.findFirstById(messageRequest.getChatId());
 
         // Validate chat owner and current logged-in user

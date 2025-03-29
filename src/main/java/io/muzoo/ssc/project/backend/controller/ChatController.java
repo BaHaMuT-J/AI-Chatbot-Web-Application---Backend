@@ -19,6 +19,7 @@ import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 @RestController
 public class ChatController {
@@ -52,7 +54,14 @@ public class ChatController {
     private MaxTokenRepository maxTokenRepository;
 
     @PostMapping("/api/chat/getByAI")
-    public ChatDTO getChat(@Valid @RequestBody ChatRequestDTO chatRequest) {
+    public ChatDTO getChat(@Valid @RequestBody ChatRequestDTO chatRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            return ChatDTO.builder()
+                    .success(false)
+                    .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
+                    .build();
+        }
+
         // Validate AI id
         Long aiId = chatRequest.getAiId();
         if (aiRepository.findFirstById(aiId) == null) {
@@ -75,7 +84,14 @@ public class ChatController {
     }
 
     @PostMapping("/api/chat/send")
-    public SendMessageResponseDTO sendMessage(@Valid @RequestBody SendMessageRequestDTO sendMessageRequest) {
+    public SendMessageResponseDTO sendMessage(@Valid @RequestBody SendMessageRequestDTO sendMessageRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            return SendMessageResponseDTO.builder()
+                    .success(false)
+                    .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
+                    .build();
+        }
+
         Chat chat = chatRepository.findFirstById(sendMessageRequest.getChatId());
 
         // Validate chat owner and current logged-in user

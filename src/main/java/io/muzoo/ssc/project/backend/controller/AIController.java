@@ -76,9 +76,9 @@ public class AIController {
     }
 
     @PostMapping("/api/ai/setting")
-    public SimpleResponseDTO setting(@Valid @RequestBody SettingRequestDTO settingRequest, BindingResult result) {
+    public SettingResponseDTO setting(@Valid @RequestBody SettingRequestDTO settingRequest, BindingResult result) {
         if (result.hasErrors()) {
-            return SimpleResponseDTO.builder()
+            return SettingResponseDTO.builder()
                     .success(false)
                     .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
                     .build();
@@ -157,6 +157,6 @@ public class AIController {
         maxToken.setMaxToken(settingRequest.getMaxToken());
         maxTokenRepository.save(maxToken);
 
-        return SimpleResponseDTO.builder().success(true).message("Setting successful.").build();
+        return SettingResponseDTO.builder().success(true).message("Setting successful.").build();
     }
 }

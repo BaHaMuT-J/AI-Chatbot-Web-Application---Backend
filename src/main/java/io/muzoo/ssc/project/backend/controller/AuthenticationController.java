@@ -8,11 +8,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
+
+import java.util.Objects;
 
 @RestController
 public class AuthenticationController {
@@ -21,7 +24,14 @@ public class AuthenticationController {
     private UserRepository userRepository;
 
     @PostMapping("/api/login")
-    public UserDTO login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletRequest request) {
+    public UserDTO login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletRequest request, BindingResult result) {
+        if (result.hasErrors()) {
+            return UserDTO.builder()
+                    .success(false)
+                    .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
+                    .build();
+        }
+
         String username = StringUtils.trim(loginRequest.getUsername());
         String password = StringUtils.trim(loginRequest.getPassword());
         try {

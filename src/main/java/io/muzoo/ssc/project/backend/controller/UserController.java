@@ -1,6 +1,7 @@
 package io.muzoo.ssc.project.backend.controller;
 
 import io.muzoo.ssc.project.backend.DTO.CreateUserRequestDTO;
+import io.muzoo.ssc.project.backend.DTO.SettingResponseDTO;
 import io.muzoo.ssc.project.backend.DTO.UserDTO;
 import io.muzoo.ssc.project.backend.model.*;
 import io.muzoo.ssc.project.backend.repository.*;
@@ -8,10 +9,13 @@ import io.muzoo.ssc.project.backend.service.CreateUserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.thymeleaf.util.StringUtils;
+
+import java.util.Objects;
 
 @RestController
 public class UserController {
@@ -23,7 +27,14 @@ public class UserController {
     private CreateUserService createUserService;
 
     @PostMapping("/api/user/create")
-    public UserDTO createUser(@Valid @RequestBody CreateUserRequestDTO createUserRequest) {
+    public UserDTO createUser(@Valid @RequestBody CreateUserRequestDTO createUserRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            return UserDTO.builder()
+                    .success(false)
+                    .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
+                    .build();
+        }
+
         String username = StringUtils.trim(createUserRequest.getUsername());
         String displayName = StringUtils.trim(createUserRequest.getDisplayName());
         String password = StringUtils.trim(createUserRequest.getPassword());
