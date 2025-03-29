@@ -40,5 +40,4 @@ build/
 
 ## Mine
 .env
-*.properties
 *.txt
