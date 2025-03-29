@@ -114,7 +114,7 @@ public class ChatController {
         String prompt = sendMessageRequest.getPrompt();
 
         return switch (aiName) {
-            case "Gemini" -> getGeminiResponse(chat, ai.getApiLink(), prompt);
+            case "Gemini" -> getGeminiResponse(chat, ai, prompt);
             case "groq" -> getGroqResponse(chat, ai, prompt);
             case "DeepSeek" -> getDeepSeekResponse(chat, ai, prompt);
             case "Mistral" -> getMistralResponse(chat, ai, prompt);
@@ -139,7 +139,10 @@ public class ChatController {
         messageRepository.save(aiMsg);
     }
 
-    private SendMessageResponseDTO getGeminiResponse(Chat chat, String aiAPI, String prompt) {
+    private SendMessageResponseDTO getGeminiResponse(Chat chat, AI ai, String prompt) {
+        Long userId = chat.getUser().getId();
+        Long aiId = ai.getId();
+
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -152,9 +155,14 @@ public class ChatController {
         contents.put("parts", java.util.Collections.singletonList(parts));
         requestBody.put("contents", java.util.Collections.singletonList(contents));
 
+        Map<String, Object> generationConfig = new HashMap<>();
+        generationConfig.put("temperature", temperatureRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getTemperature());
+        generationConfig.put("maxOutputTokens", maxTokenRepository.findFirstByUser_IdAndAi_Id(userId, aiId).getMaxToken());
+        requestBody.put("generationConfig", generationConfig);
+
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
-        ResponseEntity<String> response = restTemplate.exchange(aiAPI, HttpMethod.POST, entity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(ai.getApiLink(), HttpMethod.POST, entity, String.class);
 
         try {
             ObjectMapper objectMapper = new ObjectMapper();
