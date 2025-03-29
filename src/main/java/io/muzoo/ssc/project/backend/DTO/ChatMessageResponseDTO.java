@@ -10,7 +10,6 @@ import java.util.List;
 @Getter
 @Setter
 @SuperBuilder
-@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class ChatMessageResponseDTO extends SimpleResponseDTO {
 
     private List<MessageDTO> messagesList;

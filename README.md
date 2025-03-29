@@ -48,9 +48,9 @@ This repository is a backend built using Spring Boot. It uses maven as a build t
 
 ### **1. Prerequisites**
 
-- Install **Maven**
-- Install **Java 21**
-- Install **Docker**
+- Install [**Java 21**](https://www.oracle.com/th/java/technologies/downloads/)
+- Install [**Maven**](https://maven.apache.org/install.html)
+- Install [**Docker**](https://docs.docker.com/engine/install/)
 
 ### **2. Backend Setup**
 
