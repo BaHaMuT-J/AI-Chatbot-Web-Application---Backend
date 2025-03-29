@@ -5,6 +5,7 @@ import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.UserRepository;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +21,7 @@ public class AuthenticationController {
     private UserRepository userRepository;
 
     @PostMapping("/api/login")
-    public UserDTO login(@RequestBody LoginRequestDTO loginRequest, HttpServletRequest request) {
+    public UserDTO login(@Valid @RequestBody LoginRequestDTO loginRequest, HttpServletRequest request) {
         String username = StringUtils.trim(loginRequest.getUsername());
         String password = StringUtils.trim(loginRequest.getPassword());
         try {

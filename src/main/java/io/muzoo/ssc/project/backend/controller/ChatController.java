@@ -9,6 +9,7 @@ import io.muzoo.ssc.project.backend.model.Chat;
 import io.muzoo.ssc.project.backend.model.Message;
 import io.muzoo.ssc.project.backend.model.User;
 import io.muzoo.ssc.project.backend.repository.*;
+import jakarta.validation.Valid;
 import org.springframework.ai.mistralai.MistralAiChatModel;
 import org.springframework.ai.mistralai.MistralAiChatOptions;
 import org.springframework.ai.mistralai.api.MistralAiApi;
@@ -33,6 +34,9 @@ public class ChatController {
     private UserRepository userRepository;
 
     @Autowired
+    private AIRepository aiRepository;
+
+    @Autowired
     private ChatRepository chatRepository;
 
     @Autowired
@@ -47,14 +51,31 @@ public class ChatController {
     @Autowired
     private MaxTokenRepository maxTokenRepository;
 
-    @PostMapping("/api/chat/getByUserAndAI")
-    public ChatDTO getChat(@RequestBody ChatRequestDTO chatRequestDTO) {
-        Chat chat = chatRepository.findFirstByUser_IdAndAi_Id(chatRequestDTO.getUserId(), chatRequestDTO.getAiId());
-        return ChatDTO.builder().chatId(chat.getId()).build();
+    @PostMapping("/api/chat/getByAI")
+    public ChatDTO getChat(@Valid @RequestBody ChatRequestDTO chatRequest) {
+        // Validate AI id
+        Long aiId = chatRequest.getAiId();
+        if (aiRepository.findFirstById(aiId) == null) {
+            return ChatDTO.builder()
+                    .success(false)
+                    .message(String.format("AI %s does not exist.", aiId))
+                    .build();
+        }
+
+        // Validate chat owner and current logged-in user
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        if (principal instanceof org.springframework.security.core.userdetails.User user) {
+            User currentUser = userRepository.findFirstByUsername(user.getUsername());
+            Chat chat = chatRepository.findFirstByUser_IdAndAi_Id(currentUser.getId(), chatRequest.getAiId());
+            return ChatDTO.builder().success(true).chatId(chat.getId()).build();
+        } else {
+            // Should not come here, api is protected and only logged-in user can access
+            return ChatDTO.builder().success(false).message("User must log in first.").build();
+        }
     }
 
     @PostMapping("/api/chat/send")
-    public SendMessageResponseDTO sendMessage(@RequestBody SendMessageRequestDTO sendMessageRequest) {
+    public SendMessageResponseDTO sendMessage(@Valid @RequestBody SendMessageRequestDTO sendMessageRequest) {
         Chat chat = chatRepository.findFirstById(sendMessageRequest.getChatId());
 
         // Validate chat owner and current logged-in user
@@ -68,24 +89,19 @@ public class ChatController {
                         .build();
             }
         } else {
+            // Should not come here, api is protected and only logged-in user can access
             return SendMessageResponseDTO.builder().success(false).message("User must log in first.").build();
         }
 
         AI ai = chat.getAi();
+        String aiName = ai.getName();
         String prompt = sendMessageRequest.getPrompt();
 
-        // Validate prompt not blank
-        if (prompt == null || prompt.isBlank()) {
-            return SendMessageResponseDTO.builder().success(false).message("Missing prompt.").build();
-        }
-
-        String aiName = ai.getName();
-
         return switch (aiName) {
-            case "Gemini" -> getGeminiResponse(chat, ai.getApiLink(), sendMessageRequest.getPrompt());
-            case "groq" -> getGroqResponse(chat, ai, sendMessageRequest.getPrompt());
-            case "DeepSeek" -> getDeepSeekResponse(chat, ai, sendMessageRequest.getPrompt());
-            case "Mistral" -> getMistralResponse(chat, ai, sendMessageRequest.getPrompt());
+            case "Gemini" -> getGeminiResponse(chat, ai.getApiLink(), prompt);
+            case "groq" -> getGroqResponse(chat, ai, prompt);
+            case "DeepSeek" -> getDeepSeekResponse(chat, ai, prompt);
+            case "Mistral" -> getMistralResponse(chat, ai, prompt);
             default -> SendMessageResponseDTO.builder()
                     .success(false)
                     .message(String.format("No AI with name %s.", aiName))

@@ -6,8 +6,10 @@ import io.muzoo.ssc.project.backend.DTO.SettingResponseDTO;
 import io.muzoo.ssc.project.backend.DTO.SimpleResponseDTO;
 import io.muzoo.ssc.project.backend.model.*;
 import io.muzoo.ssc.project.backend.repository.*;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -74,9 +76,24 @@ public class AIController {
     }
 
     @PostMapping("/api/ai/setting")
-    public SimpleResponseDTO setting(@RequestBody SettingRequestDTO settingRequestDTO) {
-        Long userId = settingRequestDTO.getUserId();
-        Long aiId = settingRequestDTO.getAiId();
+    public SimpleResponseDTO setting(@Valid @RequestBody SettingRequestDTO settingRequest, BindingResult result) {
+        if (result.hasErrors()) {
+            return SimpleResponseDTO.builder()
+                    .success(false)
+                    .message(Objects.requireNonNull(result.getFieldError()).getDefaultMessage())
+                    .build();
+        }
+
+        Long userId = settingRequest.getUserId();
+        Long aiId = settingRequest.getAiId();
+
+        // Validate AI id
+        if (aiRepository.findFirstById(aiId) == null) {
+            return SettingResponseDTO.builder()
+                    .success(false)
+                    .message(String.format("AI %s does not exist.", aiId))
+                    .build();
+        }
 
         // Validate setting owner and current logged-in user
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
@@ -99,16 +116,45 @@ public class AIController {
             }
         }
 
+        // Validate new model name
+        String modelName = settingRequest.getModel();
+        List<ModelAvailable> modelsAvailable = modelAvailableRepository.findByAi_Id(aiId);
+        boolean containModelFlag = false;
+
+        for (ModelAvailable modelAvailable : modelsAvailable) {
+            if (Objects.equals(modelName, modelAvailable.getModelName())) {
+                containModelFlag = true;
+                break;
+            }
+        }
+
+        if (!containModelFlag) {
+            return SettingResponseDTO.builder()
+                    .success(false)
+                    .message(String.format("Model %s does not exist.", modelName))
+                    .oldModel(modelCurrentRepository
+                            .findFirstByUser_IdAndAi_Id(userId, aiId)
+                            .getModelName())
+                    .oldTemperature(temperatureRepository
+                            .findFirstByUser_IdAndAi_Id(userId, aiId)
+                            .getTemperature())
+                    .oldMaxToken(maxTokenRepository
+                            .findFirstByUser_IdAndAi_Id(userId, aiId)
+                            .getMaxToken())
+                    .build();
+        }
+
+        // Modify settings
         ModelCurrent modelCurrent = modelCurrentRepository.findFirstByUser_IdAndAi_Id(userId, aiId);
-        modelCurrent.setModelName(settingRequestDTO.getModel());
+        modelCurrent.setModelName(settingRequest.getModel());
         modelCurrentRepository.save(modelCurrent);
 
         Temperature temperature = temperatureRepository.findFirstByUser_IdAndAi_Id(userId, aiId);
-        temperature.setTemperature(settingRequestDTO.getTemperature());
+        temperature.setTemperature(settingRequest.getTemperature());
         temperatureRepository.save(temperature);
 
         MaxToken maxToken = maxTokenRepository.findFirstByUser_IdAndAi_Id(userId, aiId);
-        maxToken.setMaxToken(settingRequestDTO.getMaxToken());
+        maxToken.setMaxToken(settingRequest.getMaxToken());
         maxTokenRepository.save(maxToken);
 
         return SimpleResponseDTO.builder().success(true).message("Setting successful.").build();
